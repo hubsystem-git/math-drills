@@ -1,0 +1,1684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Math Drills</title>
+<meta name="description" content="Timed practice for addition, subtraction, multiplication, division and order of operations.">
+<meta name="theme-color" content="#F5F8FC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1626" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Math Drills">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>
+  :root {
+    --paper: #F5F8FC;
+    --grid: #E3EAF5;
+    --surface: #FFFFFF;
+    --press: #E3EAF5;
+    --ink: #1B2A4A;
+    --ink-deep: #0B1530;
+    --ink-soft: #55637F;
+    --ink-faint: #97A3BB;
+    --rule: #D3DCEA;
+    --hl: #FFE36E;
+    --hl-ink: #1B2A4A;
+    --red: #D3313D;
+    --green: #168A5B;
+    --focus: #3A6CF4;
+    --font: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0F1626;
+      --grid: #172238;
+      --surface: #141D31;
+      --press: #1F2C47;
+      --ink: #E6ECF7;
+      --ink-deep: #9DAED0;
+      --ink-soft: #A6B3CC;
+      --ink-faint: #5F6D8A;
+      --rule: #27344F;
+      --hl: #F0CF4A;
+      --hl-ink: #1B2A4A;
+      --red: #FF6670;
+      --green: #3FD18F;
+      --focus: #7EA2FF;
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  html, body { margin: 0; min-height: 100%; }
+  body, #play {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  body {
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html.playing, html.playing body { overflow: hidden; overscroll-behavior: none; }
+  button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+  button:disabled { cursor: not-allowed; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Shared pieces ---------- */
+  .screen {
+    max-width: 1100px; margin: 0 auto;
+    padding: calc(20px + var(--sat)) calc(16px + var(--sar)) calc(48px + var(--sab)) calc(16px + var(--sal));
+  }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
+  .icon-btn {
+    flex: none; width: 48px; height: 48px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2px solid var(--ink); border-radius: 12px; background: var(--surface);
+  }
+  .icon-btn .off, .icon-btn[aria-pressed="true"] .on { display: none; }
+  .icon-btn[aria-pressed="true"] .off { display: inline; }
+  .icon-btn[aria-pressed="true"] { color: var(--red); border-color: var(--red); }
+  .panel { margin-top: 24px; padding: 20px; background: var(--surface); border: 2px solid var(--ink); border-radius: 16px; }
+  .panel-title { margin: 0 0 10px; font-size: 20px; font-weight: 900; }
+  .small-btn {
+    height: 40px; padding: 0 14px;
+    border: 2px solid var(--ink); border-radius: 10px;
+    background: var(--surface); font-weight: 800; font-size: 15px;
+  }
+  .small-btn.danger { border-color: var(--red); color: var(--red); }
+  @media (hover: hover) {
+    .small-btn:hover { background: var(--ink); color: var(--paper); }
+    .small-btn.danger:hover { background: var(--red); color: var(--surface); }
+  }
+
+  /* Calculator-key glyph for each game type */
+  .key {
+    flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.12em;
+    width: 60px; height: 60px; border-radius: 14px;
+    background: var(--ink); color: var(--paper);
+    font-size: 32px; font-weight: 900; line-height: 1;
+  }
+  .key.two { font-size: 25px; }
+  .key.four { display: inline-grid; grid-template-columns: 1fr 1fr; place-items: center; gap: 0 4px; padding: 8px; font-size: 19px; }
+  .key.paren { font-size: 22px; gap: 0.32em; }
+  .key.big { width: 68px; height: 68px; font-size: 38px; }
+  .key.big.two { font-size: 29px; }
+  .key.big.four { font-size: 21px; }
+  .key.big.paren { font-size: 26px; }
+
+  /* ---------- Home ---------- */
+  .app-title { margin: 0; font-size: clamp(36px, 6vw, 54px); font-weight: 900; line-height: 1; letter-spacing: -0.01em; }
+  .group { margin-top: 28px; }
+  .group-title { margin: 0 0 10px; font-size: 16px; font-weight: 800; color: var(--ink-soft); }
+  .tiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+  .tile {
+    grid-column: span 2; display: flex; align-items: center; gap: 16px;
+    min-height: 96px; padding: 14px 16px; text-align: left;
+    background: var(--surface); border: 2px solid var(--ink); border-radius: 18px;
+    box-shadow: 0 4px 0 var(--ink);
+    transition: transform .06s, box-shadow .06s;
+  }
+  .tiles > .tile:first-child:nth-last-child(2),
+  .tiles > .tile:first-child:nth-last-child(2) ~ .tile { grid-column: span 3; }
+  .tile:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  .tile .txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .tile .name { font-size: 20px; font-weight: 900; line-height: 1.15; -webkit-hyphens: auto; hyphens: auto; }
+  .tile .scope { font-size: 14px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .chev { flex: none; margin-left: auto; color: var(--ink-faint); }
+  @media (min-width: 761px) and (max-width: 1023px) {   /* iPad portrait: three tiles across, so tighten them */
+    .tile { gap: 12px; padding: 12px 14px; }
+    .tile .chev { display: none; }
+    .tile .key { width: 50px; height: 50px; font-size: 27px; }
+    .tile .key.two { font-size: 21px; }
+    .tile .key.four { font-size: 16px; padding: 6px; }
+    .tile .key.paren { font-size: 19px; }
+    .tile .name { font-size: 18px; }
+  }
+  @media (max-width: 760px) {
+    .tiles { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .tile, .tiles > .tile:first-child:nth-last-child(2), .tiles > .tile:first-child:nth-last-child(2) ~ .tile { grid-column: auto; }
+    .tile { min-height: 80px; padding: 12px 14px; }
+    .tile .key { width: 54px; height: 54px; font-size: 29px; }
+    .tile .key.two { font-size: 23px; }
+    .tile .key.four { font-size: 17px; padding: 7px; }
+    .tile .key.paren { font-size: 20px; }
+  }
+  .hint { margin: 24px 0 0; font-size: 14px; color: var(--ink-soft); }
+  html.touch .kbd-only { display: none; }
+  #storageNote { color: var(--red); font-weight: 700; }
+
+  .backup { margin-top: 32px; }
+  .backup-text { margin: 0 0 14px; color: var(--ink-soft); }
+  .backup-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .code {
+    display: block; width: 100%; margin-top: 10px; padding: 10px 12px;
+    border: 2px solid var(--rule); border-radius: 12px;
+    background: var(--paper); color: var(--ink);
+    font: 600 16px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    word-break: break-all; resize: vertical;
+  }
+  .code:focus { border-color: var(--focus); outline: none; }
+  .restore-label { display: block; margin-top: 22px; font-weight: 900; }
+  #codeIn { margin-bottom: 10px; }
+  .confirm-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; font-weight: 700; }
+  .backup-msg { margin: 12px 0 0; font-weight: 700; }
+  .backup-msg:empty { display: none; }
+  .backup-msg.err { color: var(--red); }
+
+  /* ---------- Game type page ---------- */
+  .back {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 48px; padding: 0 16px 0 12px;
+    border: 2px solid var(--ink); border-radius: 12px; background: var(--surface); font-weight: 800;
+  }
+  .mode-head { display: flex; align-items: center; gap: 16px; margin-top: 22px; }
+  .mode-head h1 { margin: 0; font-size: clamp(30px, 5.5vw, 46px); font-weight: 900; line-height: 1.05; }
+  #scopeSummary, .rules { margin: 16px 0 0; font-size: 17px; color: var(--ink-soft); max-width: 70ch; }
+  #scopeSummary strong { color: var(--ink); }
+  #scopeSummary.warn { color: var(--red); font-weight: 700; }
+  .tool {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 44px; margin-top: 12px; padding: 0 16px;
+    border: 2px solid var(--ink); border-radius: 12px; background: var(--surface); font-weight: 800;
+  }
+  .tool[aria-expanded="true"] { background: var(--ink); color: var(--paper); }
+  .tool .chev { transition: transform .15s; }
+  .tool[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+  /* Choose numbers */
+  .editor + .editor { margin-top: 22px; padding-top: 22px; border-top: 2px solid var(--rule); }
+  .ed-title { margin: 0 0 12px; font-size: 18px; font-weight: 900; }
+  .help { margin: 0 0 14px; }
+  .chart-ed { display: grid; grid-template-columns: minmax(0, 460px) minmax(220px, 1fr); gap: 28px; align-items: start; }
+  @media (max-width: 760px) { .chart-ed { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
+  .chart { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 3px; font-weight: 800; }
+  .chart .cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: clamp(9px, 2.3vw, 14px); color: var(--ink-faint);
+    border-radius: 4px; position: relative;
+  }
+  .chart .cell.on { background: var(--hl); color: var(--hl-ink); }
+  .chart .cell.miss::after {
+    content: ""; position: absolute; inset: 6%;
+    border: 2px solid var(--red); border-radius: 50%;
+    transform: rotate(-14deg) scaleX(1.1);
+  }
+  .chart .corner { display: flex; align-items: center; justify-content: center; font-size: clamp(14px, 3vw, 22px); color: var(--ink-faint); }
+  .chart .hdr {
+    aspect-ratio: 1; padding: 0; min-width: 0;
+    border: 2px dashed var(--ink-faint); border-radius: 6px;
+    background: transparent; color: var(--ink-faint);
+    font-weight: 900; font-size: clamp(10px, 2.6vw, 16px);
+  }
+  .chart .hdr[aria-pressed="true"] { border: 2px solid var(--ink); background: var(--ink); color: var(--paper); }
+  .axis { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+  .axis-name { width: 104px; font-weight: 800; }
+  .chips { display: none; }
+  @media (max-width: 760px) {
+    .chips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin: 0 0 16px; }
+  }
+  .chip {
+    height: 44px; padding: 0;
+    border: 2px dashed var(--ink-faint); border-radius: 10px;
+    background: transparent; color: var(--ink-faint); font-weight: 900; font-size: 17px;
+  }
+  .chip[aria-pressed="true"] { border: 2px solid var(--ink); background: var(--ink); color: var(--paper); }
+  .count { margin: 16px 0 0; font-size: 15px; color: var(--ink-soft); }
+  .count b { color: var(--ink); font-size: 22px; font-weight: 900; }
+  .ring-key { display: inline-block; width: 16px; height: 13px; border: 2px solid var(--red); border-radius: 50%; transform: rotate(-14deg); vertical-align: -2px; margin-right: 4px; }
+
+  .steppers { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+  .st-label { font-weight: 800; }
+  .stepper { display: inline-flex; border: 2px solid var(--ink); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .st-btn {
+    width: 52px; height: 48px; border: 0; background: transparent;
+    font-size: 26px; font-weight: 900; line-height: 1;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  .st-btn:active { background: var(--press); }
+  .stepper input {
+    width: 68px; height: 48px; padding: 0;
+    border: 0; border-left: 2px solid var(--ink); border-right: 2px solid var(--ink); border-radius: 0;
+    background: transparent; color: var(--ink);
+    font: inherit; font-size: 20px; font-weight: 900; text-align: center;
+    -moz-appearance: textfield; appearance: textfield;
+  }
+  .stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper input:focus { outline: none; background: var(--press); }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .preset {
+    height: 40px; padding: 0 16px;
+    border: 2px solid var(--rule); border-radius: 999px;
+    background: var(--surface); font-weight: 800; font-size: 15px;
+  }
+  .preset[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+  .reset-full { margin-top: 22px; }
+
+  /* Last round */
+  .lr-sum { margin: 0; font-size: 17px; }
+  .lr-sum b { font-weight: 900; }
+  .missed { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .missed li {
+    padding: 6px 12px; border: 2px solid var(--rule); border-radius: 10px;
+    font-weight: 800; font-size: 17px; white-space: nowrap;
+  }
+  .missed li b { color: var(--green); font-weight: 900; }
+  .missed li s { color: var(--red); font-weight: 600; font-size: 14px; margin-left: 6px; }
+  .missed li .work { display: block; font-size: 14px; font-weight: 600; color: var(--ink-soft); white-space: normal; }
+  .lr-note { margin: 12px 0 0; font-size: 14px; color: var(--ink-soft); }
+
+  /* Start buttons and leaderboards, one column per time limit */
+  .sheet {
+    margin-top: 28px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    background: var(--surface); border: 2px solid var(--ink); border-radius: 16px; overflow: hidden;
+  }
+  .col { padding: 18px; border-left: 2px solid var(--rule); min-width: 0; }
+  .col:first-child { border-left: 0; }
+  @media (max-width: 900px) {
+    .sheet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .col:nth-child(3) { border-left: 0; }
+    .col:nth-child(n+3) { border-top: 2px solid var(--rule); }
+  }
+  @media (max-width: 420px) {
+    .col { padding: 14px 12px; }
+  }
+  .limit { margin: 0 0 14px; display: flex; align-items: baseline; gap: 8px; }
+  .limit .n { font-size: clamp(42px, 6vw, 56px); font-weight: 900; line-height: .9; letter-spacing: -0.02em; }
+  .limit .u { font-size: 17px; font-weight: 800; color: var(--ink-soft); }
+  .start {
+    width: 100%; height: 54px;
+    border: 0; border-radius: 12px;
+    background: var(--ink); color: var(--paper);
+    font-size: 20px; font-weight: 900;
+    box-shadow: 0 4px 0 var(--ink-deep);
+    transition: transform .05s, box-shadow .05s;
+  }
+  .start:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink-deep); }
+  .start:disabled { opacity: .35; box-shadow: none; transform: none; }
+  .col h3 { margin: 22px 0 4px; font-size: 14px; font-weight: 800; color: var(--ink-soft); }
+  .board { list-style: none; margin: 0; padding: 0; }
+  .board li {
+    display: grid; grid-template-columns: 16px 44px minmax(0, 1fr); gap: 8px; align-items: baseline;
+    padding: 5px 8px; margin: 0 -8px;
+    border-bottom: 1px solid var(--rule); border-radius: 6px;
+  }
+  .board .rk { font-size: 13px; font-weight: 800; color: var(--ink-faint); }
+  .board .sc { font-size: 20px; font-weight: 900; text-align: right; }
+  .board .rg { font-size: 13px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .board li.empty .sc { color: var(--ink-faint); font-weight: 600; }
+  .board li.fresh { background: var(--hl); border-bottom-color: transparent; }
+  .board li.fresh, .board li.fresh .rk, .board li.fresh .rg { color: var(--hl-ink); }
+  .reset-wrap { margin-top: 16px; min-height: 40px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 14px; }
+  .reset {
+    padding: 6px 0; border: 0; background: none;
+    color: var(--ink-soft); font-weight: 700; font-size: 14px;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+  .confirm { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-weight: 700; }
+
+  /* ---------- Game ---------- */
+  #play {
+    position: fixed; inset: 0; z-index: 10;
+    display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto;
+    padding: calc(14px + var(--sat)) calc(16px + var(--sar)) calc(16px + var(--sab)) calc(16px + var(--sal));
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  .hud { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; }
+  .hud .label { display: block; font-size: 15px; font-weight: 800; color: var(--ink-soft); }
+  .hud .val { display: block; font-size: clamp(36px, 6vw, 60px); font-weight: 900; line-height: 1; }
+  .hud .right { text-align: right; }
+  .quit {
+    margin-top: 4px; height: 40px; padding: 0 18px;
+    border: 2px solid var(--rule); border-radius: 999px;
+    background: var(--surface); color: var(--ink-soft); font-weight: 800; font-size: 15px;
+  }
+  #timer.low { color: var(--red); }
+  #score { transform-origin: right center; }
+  #score.bump { animation: bump .28s ease-out; }
+  @keyframes bump { 0% { transform: scale(1.18); color: var(--green); } 100% { transform: scale(1); } }
+  #score.drop { animation: drop .35s ease-out; }
+  @keyframes drop { 0% { transform: translateY(6px); color: var(--red); } 60% { color: var(--red); } 100% { transform: none; } }
+  .stage { min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; }
+  #mark { height: clamp(40px, 9vh, 110px); font-size: clamp(40px, 9vh, 110px); line-height: 1; font-weight: 900; color: var(--red); }
+  #mark.soft { font-size: 20px; display: flex; align-items: flex-end; color: var(--ink-soft); font-weight: 800; }
+  #problem { margin: 0; font-size: clamp(40px, min(12vw, 14vh), 150px); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; white-space: nowrap; }
+  #problem.count { color: var(--ink-faint); }
+  #problem .ans { color: var(--green); }
+  #answer {
+    min-width: 2.4ch; min-height: 1.15em; padding: 0 8px;
+    border-bottom: 6px solid var(--ink);
+    font-size: clamp(44px, min(10vw, 11vh), 110px); font-weight: 900; line-height: 1.1; text-align: center;
+  }
+  #answer.typing::after {
+    content: ""; display: inline-block; width: 0.07em; height: 0.78em; margin-left: 0.05em;
+    background: var(--ink); vertical-align: -0.04em; animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  #answer.wrong { color: var(--red); border-bottom-color: var(--red); text-decoration: line-through; text-decoration-thickness: 6px; }
+
+  .keypad { display: none; width: 100%; max-width: 440px; margin: 14px auto 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  html.touch .keypad { display: grid; }
+  .k {
+    height: clamp(52px, 8.5vh, 82px); padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--ink); border-radius: 14px;
+    background: var(--surface); box-shadow: 0 4px 0 var(--ink);
+    font-size: clamp(24px, 4vh, 34px); font-weight: 900;
+  }
+  .k.down { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); background: var(--press); }
+  .k.enter { background: var(--ink); color: var(--paper); font-size: clamp(18px, 2.8vh, 24px); }
+  .k.enter.down { background: var(--ink-deep); }
+  @media (orientation: landscape) and (max-height: 540px) {
+    html.touch #play { grid-template-columns: minmax(0, 1fr) minmax(220px, 40%); grid-template-rows: auto minmax(0, 1fr); column-gap: 20px; }
+    html.touch .hud { grid-column: 1; grid-row: 1; }
+    html.touch .stage { grid-column: 1; grid-row: 2; }
+    html.touch .keypad { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin: 0; gap: 8px; }
+    html.touch .k { height: clamp(40px, 18vh, 64px); }
+  }
+
+  .final { grid-row: 1 / -1; grid-column: 1 / -1; align-self: center; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+  .final .f-head { margin: 0; font-size: 22px; font-weight: 800; color: var(--ink-soft); }
+  .final .f-score { margin: 0; font-size: clamp(110px, 22vw, 220px); font-weight: 900; line-height: 1; letter-spacing: -0.03em; }
+  .final .f-sub { margin: 0; font-size: 22px; font-weight: 800; }
+  .final .f-msg { margin: 16px 0 0; font-size: clamp(22px, 4vw, 34px); font-weight: 900; }
+  .final .f-msg.good { color: var(--green); }
+  .final .f-msg.fail { color: var(--red); }
+
+  @media (prefers-reduced-motion: reduce) {
+    #score.bump, #score.drop, #answer.typing::after { animation: none; }
+    .tile, .start, .tool .chev { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<main id="home" class="screen" hidden>
+  <header class="bar">
+    <h1 class="app-title">Math Drills</h1>
+    <button type="button" class="icon-btn mute-btn" aria-pressed="false" title="Sound on (M)">
+      <span class="sr">Mute sounds</span>
+      <svg class="on" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5h4l5-4v13l-5-4H3z" fill="currentColor"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>
+      <svg class="off" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5h4l5-4v13l-5-4H3z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+    </button>
+  </header>
+  <nav id="groups" aria-label="Game types"></nav>
+  <p class="hint kbd-only">On a computer, type answers and press Enter. Esc quits a game, and M turns sound on or off.</p>
+  <p class="hint" id="storageNote" hidden>This browser isn’t allowing saved scores, so high scores will disappear when the page closes.</p>
+
+  <section class="panel backup" aria-labelledby="backupTitle">
+    <h2 class="panel-title" id="backupTitle">Backup</h2>
+    <p class="backup-text">A backup code holds every high score. Paste it into Restore on another device, or keep it somewhere safe.</p>
+    <div class="backup-row"><button type="button" class="small-btn" id="copyCode">Copy backup code</button></div>
+    <textarea id="codeOut" class="code" rows="3" readonly hidden aria-label="Backup code"></textarea>
+    <label class="restore-label" for="codeIn">Restore from a code</label>
+    <textarea id="codeIn" class="code" rows="3" placeholder="Paste a backup code here" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"></textarea>
+    <div class="backup-row"><button type="button" class="small-btn" id="restoreBtn">Restore</button></div>
+    <div class="confirm-row" id="restoreConfirm" hidden>
+      <span id="restoreQ"></span>
+      <button type="button" class="small-btn danger" id="restoreYes">Replace</button>
+      <button type="button" class="small-btn" id="restoreNo">Cancel</button>
+    </div>
+    <p class="backup-msg" id="backupMsg" role="status"></p>
+  </section>
+</main>
+
+<main id="modePage" class="screen" hidden>
+  <header class="bar">
+    <button type="button" class="back" id="backBtn">
+      <svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      All games
+    </button>
+    <button type="button" class="icon-btn mute-btn" aria-pressed="false" title="Sound on (M)">
+      <span class="sr">Mute sounds</span>
+      <svg class="on" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5h4l5-4v13l-5-4H3z" fill="currentColor"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>
+      <svg class="off" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5h4l5-4v13l-5-4H3z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+    </button>
+  </header>
+  <div class="mode-head"><span class="key big" id="modeKey" aria-hidden="true"></span><h1 id="modeName"></h1></div>
+  <p id="scopeSummary" aria-live="polite"></p>
+  <p class="rules" id="orderRules" hidden>Three numbers and two steps, like (3 + 4) × 5 or 3 + 4 × 5. Work out parentheses first, then × and ÷, then + and −, each from left to right. × and ÷ stay within 12 × 12, + and − use numbers up to 20, and every answer is a whole number.</p>
+  <button type="button" class="tool" id="numbersBtn" aria-expanded="false" aria-controls="numbers">
+    Choose numbers
+    <svg class="chev" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+
+  <section id="numbers" class="panel" hidden aria-label="Choose numbers">
+    <div class="editor" id="chartEd">
+      <h2 class="ed-title" id="chartTitle">× and ÷ facts</h2>
+      <div class="chart-ed">
+        <div class="chart" id="chart"></div>
+        <div>
+          <p class="help" id="chartHelp"></p>
+          <div class="axis"><span class="axis-name">Top row</span>
+            <button type="button" class="small-btn" data-axis="top" data-fill="all">All</button>
+            <button type="button" class="small-btn" data-axis="top" data-fill="none">None</button>
+          </div>
+          <div class="chips" data-axis="top"></div>
+          <div class="axis"><span class="axis-name">Left column</span>
+            <button type="button" class="small-btn" data-axis="left" data-fill="all">All</button>
+            <button type="button" class="small-btn" data-axis="left" data-fill="none">None</button>
+          </div>
+          <div class="chips" data-axis="left"></div>
+          <p class="count" id="factCount"></p>
+          <p class="lr-note" id="ringKey" hidden><span class="ring-key" aria-hidden="true"></span>Circled facts were missed last round.</p>
+        </div>
+      </div>
+    </div>
+    <div class="editor" id="rangeEd">
+      <h2 class="ed-title" id="rangeTitle">+ and − numbers</h2>
+      <p class="help" id="rangeHelp"></p>
+      <div class="steppers">
+        <span class="st-label">From</span>
+        <div class="stepper" data-end="lo">
+          <button type="button" class="st-btn" data-step="-1" aria-label="Lower the smallest number">−</button>
+          <input id="loInput" type="number" inputmode="numeric" min="1" max="100" aria-label="Smallest number">
+          <button type="button" class="st-btn" data-step="1" aria-label="Raise the smallest number">+</button>
+        </div>
+        <span class="st-label">to</span>
+        <div class="stepper" data-end="hi">
+          <button type="button" class="st-btn" data-step="-1" aria-label="Lower the biggest number">−</button>
+          <input id="hiInput" type="number" inputmode="numeric" min="1" max="100" aria-label="Biggest number">
+          <button type="button" class="st-btn" data-step="1" aria-label="Raise the biggest number">+</button>
+        </div>
+      </div>
+      <div class="presets">
+        <button type="button" class="preset" data-preset="1-10">1–10</button>
+        <button type="button" class="preset" data-preset="1-20">1–20</button>
+        <button type="button" class="preset" data-preset="1-50">1–50</button>
+        <button type="button" class="preset" data-preset="1-100">1–100</button>
+        <button type="button" class="preset" data-preset="10-99">10–99</button>
+      </div>
+    </div>
+    <button type="button" class="small-btn reset-full" id="resetNumbers">Reset to full</button>
+  </section>
+
+  <section id="lastRound" class="panel" hidden aria-label="Last round">
+    <h2 class="panel-title">Last round</h2>
+    <p class="lr-sum" id="lrSum"></p>
+    <ul class="missed" id="lrMissed"></ul>
+    <p class="lr-note" id="lrNote"></p>
+  </section>
+
+  <section class="sheet" id="sheet" aria-label="Games and high scores"></section>
+</main>
+
+<main id="play" hidden>
+  <div class="hud" id="hud">
+    <div><span class="label">Time</span><span class="val" id="timer">0:00</span></div>
+    <button type="button" class="quit" id="quitBtn" title="Quit without saving (Esc)">Quit</button>
+    <div class="right"><span class="label">Score</span><span class="val" id="score">0</span></div>
+  </div>
+  <div class="stage" id="stage">
+    <div id="mark" aria-hidden="true"></div>
+    <p id="problem" aria-live="assertive"></p>
+    <div id="answer" role="status" aria-label="Your answer"></div>
+  </div>
+  <div class="keypad" id="keypad" aria-label="Number pad"></div>
+  <div class="final" id="final" hidden aria-live="assertive">
+    <p class="f-head">Time's up</p>
+    <p class="f-score" id="fScore"></p>
+    <p class="f-sub" id="fSub"></p>
+    <p class="f-msg" id="fMsg"></p>
+  </div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- Game types ----------
+  const TIMES = [30, 60, 90, 120];
+  const NUMS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  const FULL = 4095;          // all twelve numbers picked on a chart axis (one bit per number)
+  const LO = 1, HI = 100;     // limits of the + and − number range
+  const NB = ' ';
+  const SYM = { add: '+', sub: '−', mul: '×', div: '÷' };
+
+  // The order of this list is part of the backup code format; add new types at the end.
+  const MODES = [
+    { id: 'add',    name: 'Addition',            word: 'addition',            glyph: [SYM.add], ops: ['add'], range: true },
+    { id: 'sub',    name: 'Subtraction',         word: 'subtraction',         glyph: [SYM.sub], ops: ['sub'], range: true },
+    { id: 'addsub', name: 'Add & subtract',      word: 'add & subtract',      glyph: [SYM.add, SYM.sub], ops: ['add', 'sub'], range: true },
+    { id: 'mul',    name: 'Multiplication',      word: 'multiplication',      glyph: [SYM.mul], ops: ['mul'], chart: true },
+    { id: 'div',    name: 'Division',            word: 'division',            glyph: [SYM.div], ops: ['div'], chart: true },
+    { id: 'muldiv', name: 'Multiply & divide',   word: 'multiply & divide',   glyph: [SYM.mul, SYM.div], ops: ['mul', 'div'], chart: true },
+    { id: 'all',    name: 'All four',            word: 'all-four',            glyph: [SYM.add, SYM.sub, SYM.mul, SYM.div], ops: ['add', 'sub', 'mul', 'div'], chart: true, range: true },
+    { id: 'order',  name: 'Order of operations', word: 'order of operations', glyph: ['(', ')'], ops: [], fixed: true }
+  ];
+  const MODE = {};
+  MODES.forEach(m => { MODE[m.id] = m; });
+  const GROUPS = [
+    { name: 'Adding and subtracting', ids: ['add', 'sub', 'addsub'] },
+    { name: 'Multiplying and dividing', ids: ['mul', 'div', 'muldiv'] },
+    { name: 'Mixed practice', ids: ['all', 'order'] }
+  ];
+
+  // ---------- Small helpers ----------
+  const $ = (id) => document.getElementById(id);
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = text;
+    return e;
+  }
+  const ri = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const maskList = (mask) => NUMS.filter(n => mask & (1 << (n - 1)));
+  const span = (lo, hi) => { const r = []; for (let n = lo; n <= hi; n++) r.push(n); return r; };
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function compress(arr) {
+    const parts = [];
+    for (let i = 0; i < arr.length; ) {
+      let j = i;
+      while (j + 1 < arr.length && arr[j + 1] === arr[j] + 1) j++;
+      parts.push(j > i ? arr[i] + '–' + arr[j] : String(arr[i]));
+      i = j + 1;
+    }
+    return parts.join(', ');
+  }
+  const fmtScore = (n) => (n < 0 ? '−' + Math.abs(n) : String(n));
+  function fmtDate(iso) {   // "Oct 21", with the year only for other years, so it fits narrow columns
+    const d = new Date(iso);
+    const opts = d.getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' };
+    return d.toLocaleDateString(undefined, opts);
+  }
+  function fmtTime(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+  const plural = (n) => n + ' high ' + (n === 1 ? 'score' : 'scores');
+  const say = (a, sym, b) => a + NB + sym + NB + b;
+
+  // ---------- Number choices ----------
+  function defaultScope(m) {
+    const s = {};
+    if (m.chart) { s.top = FULL; s.left = FULL; }
+    if (m.range) { s.lo = LO; s.hi = HI; }
+    return s;
+  }
+  // A game type's number choices from untrusted data (saved data or a backup code), or null.
+  function cleanScope(m, s) {
+    if (m.fixed) return {};
+    if (!s || typeof s !== 'object') return null;
+    const out = {};
+    if (m.chart) {
+      if (!Number.isInteger(s.top) || !Number.isInteger(s.left) || s.top < 0 || s.top > FULL || s.left < 0 || s.left > FULL) return null;
+      out.top = s.top; out.left = s.left;
+    }
+    if (m.range) {
+      if (!Number.isInteger(s.lo) || !Number.isInteger(s.hi) || s.lo < LO || s.hi > HI || s.lo > s.hi) return null;
+      out.lo = s.lo; out.hi = s.hi;
+    }
+    return out;
+  }
+  const hasFacts = (m, s) => !m.chart || (s.top > 0 && s.left > 0);
+  const isFull = (m, s) => (!m.chart || (s.top === FULL && s.left === FULL)) && (!m.range || (s.lo === LO && s.hi === HI));
+  const chartLabel = (s) => (!s.top || !s.left) ? 'no numbers'
+    : (s.top === FULL && s.left === FULL) ? '12 × 12'
+    : compress(maskList(s.top)) + ' × ' + compress(maskList(s.left));
+  const rangeLabel = (s) => s.lo === s.hi ? String(s.lo) : s.lo + '–' + s.hi;
+  function scopeLabel(m, s) {
+    if (m.fixed || isFull(m, s)) return 'Full range';
+    if (m.chart && m.range) return chartLabel(s) + ', ' + rangeLabel(s);
+    return m.chart ? chartLabel(s) : rangeLabel(s);
+  }
+  function tileLabel(m, s) {
+    if (m.fixed) return '3 numbers, 2 steps';
+    if (m.chart && m.range) return isFull(m, s) ? 'Full range' : chartLabel(s) + ', ' + rangeLabel(s);
+    if (m.chart) return s.top === FULL && s.left === FULL ? 'Full 12 × 12' : chartLabel(s);
+    return 'Numbers ' + rangeLabel(s);
+  }
+
+  // ---------- Saved data (this device's browser storage) ----------
+  const STORE_KEY = 'mathDrills.v1';
+  const storageOK = (() => {
+    try { localStorage.setItem('__md_test', '1'); localStorage.removeItem('__md_test'); return true; }
+    catch (e) { return false; }
+  })();
+
+  // boards[gameType][seconds] holds every game that is in either of that time limit's top-5 lists.
+  function blankBoards() {
+    const b = {};
+    MODES.forEach(m => { b[m.id] = {}; TIMES.forEach(t => { b[m.id][t] = []; }); });
+    return b;
+  }
+  // One saved game from untrusted data, or null.
+  function cleanGame(m, g) {
+    if (!g || typeof g !== 'object' || !Number.isFinite(g.score)) return null;
+    const scope = cleanScope(m, g.scope);
+    if (!scope || !hasFacts(m, scope)) return null;
+    const count = (n) => (Number.isFinite(n) && n >= 0 ? Math.min(1023, Math.round(n)) : 0);
+    const t = typeof g.at === 'string' ? Date.parse(g.at) : NaN;
+    return {
+      id: newId(), score: clamp(Math.round(g.score), -1023, 1023),
+      right: count(g.right), wrong: count(g.wrong),
+      at: new Date(isNaN(t) ? 0 : t).toISOString(), scope
+    };
+  }
+
+  // Highest score first; on a tie the earlier game keeps the higher spot.
+  const byRank = (a, b) => (b.score - a.score) || (a.at < b.at ? -1 : a.at > b.at ? 1 : 0);
+  // The top-5 lists for one game type and time limit.
+  function lists(m, games) {
+    const sorted = games.slice().sort(byRank);
+    if (m.fixed) return { top: sorted.slice(0, 5) };
+    return { full: sorted.filter(g => isFull(m, g.scope)).slice(0, 5), any: sorted.slice(0, 5) };
+  }
+  // Drop games that no longer appear on any top-5 list.
+  function prune(m, games) {
+    const l = lists(m, games);
+    const keep = new Set([].concat(l.top || [], l.full || [], l.any || []));
+    return games.filter(g => keep.has(g)).sort(byRank);
+  }
+  function cleanBoards(raw) {
+    const out = blankBoards();
+    if (!raw || typeof raw !== 'object') return out;
+    MODES.forEach(m => TIMES.forEach(t => {
+      const list = raw[m.id] && raw[m.id][t];
+      if (Array.isArray(list)) out[m.id][t] = prune(m, list.map(g => cleanGame(m, g)).filter(Boolean));
+    }));
+    return out;
+  }
+  function load() {
+    const st = { boards: blankBoards(), scopes: {}, muted: false };
+    MODES.forEach(m => { st.scopes[m.id] = defaultScope(m); });
+    if (!storageOK) return st;
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORE_KEY));
+      if (raw && typeof raw === 'object') {
+        st.boards = cleanBoards(raw.boards);
+        MODES.forEach(m => {
+          const s = raw.scopes && cleanScope(m, raw.scopes[m.id]);
+          if (s) st.scopes[m.id] = s;
+        });
+        st.muted = raw.muted === true;
+      }
+    } catch (e) { /* unreadable data: start fresh */ }
+    return st;
+  }
+  function save() {
+    if (!storageOK) return;
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ v: 1, boards: state.boards, scopes: state.scopes, muted: state.muted })); }
+    catch (e) { /* storage full or blocked */ }
+  }
+  const countGames = (boards) => MODES.reduce((n, m) => n + TIMES.reduce((k, t) => k + boards[m.id][t].length, 0), 0);
+
+  const state = load();
+  let lastId = null;       // the most recent saved game, highlighted on its lists
+  let lastRound = null;    // summary of the most recent finished round
+
+  // ---------- Questions ----------
+  // Every fact is a pair a, b. For × and ÷, a is a top number and b a left number on the chart:
+  // multiplication asks a × b, division asks (a × b) ÷ b. For + and −, both come from the range:
+  // addition asks a + b, subtraction undoes it with (a + b) − b. Answers are always whole and 0 or more.
+  function simpleQuestion(op, a, b) {
+    if (op === 'add') return { op, a, b, text: say(a, SYM.add, b), ans: a + b };
+    if (op === 'sub') return { op, a, b, text: say(a + b, SYM.sub, b), ans: a };
+    if (op === 'mul') return { op, a, b, text: say(a, SYM.mul, b), ans: a * b };
+    return { op, a, b, text: say(a * b, SYM.div, b), ans: a };
+  }
+
+  // Deals every item once in random order, then reshuffles, so nothing repeats
+  // within a round until everything in the selection has come up.
+  function deck(items) {
+    let cards = [], last = null;
+    return () => {
+      if (!cards.length) {
+        cards = shuffle(items.slice());
+        const n = cards.length;
+        if (n > 1 && cards[n - 1] === last) {   // a new deal shouldn't open with the question just asked
+          const j = Math.floor(Math.random() * (n - 1));
+          const t = cards[j]; cards[j] = cards[n - 1]; cards[n - 1] = t;
+        }
+      }
+      last = cards.pop();
+      return last;
+    };
+  }
+
+  function makeAsker(m, s) {
+    if (m.fixed) { const seen = new Set(); return () => orderQuestion(seen); }
+    const pairs = (as, bs) => { const out = []; as.forEach(a => bs.forEach(b => out.push(a * 1000 + b))); return out; };
+    const nums = m.range ? span(s.lo, s.hi) : null;
+    const chartPairs = m.chart ? pairs(maskList(s.top), maskList(s.left)) : null;
+    const rangePairs = m.range ? pairs(nums, nums) : null;
+    const decks = {};
+    m.ops.forEach(op => { decks[op] = deck(op === 'add' || op === 'sub' ? rangePairs : chartPairs); });
+    return () => {
+      const op = pick(m.ops);   // mixed types pick each operation equally often
+      const k = decks[op]();
+      return simpleQuestion(op, Math.floor(k / 1000), k % 1000);
+    };
+  }
+
+  // ---------- Order of operations ----------
+  // Three numbers, two steps. The step done first is "inner", the other is "root".
+  // × and ÷ steps stay inside the 12 × 12 table, + and − numbers are 1 to 20,
+  // and every step gives a whole number of 0 or more.
+  const PREC = {}; PREC[SYM.add] = 1; PREC[SYM.sub] = 1; PREC[SYM.mul] = 2; PREC[SYM.div] = 2;
+  const OPS4 = [SYM.add, SYM.sub, SYM.mul, SYM.div];
+  const PLAIN = [], BRACKETED = [];
+  OPS4.forEach(o1 => OPS4.forEach(o2 => {
+    // Written left to right as x o1 y o2 z, with no parentheses: the usual order decides which step is first.
+    PLAIN.push({ first: PREC[o2] > PREC[o1] ? 'right' : 'left', o1, o2, paren: false });
+    // Parentheses only where they change the answer.
+    if (PREC[o1] < PREC[o2]) BRACKETED.push({ first: 'left', o1, o2, paren: true });       // (x + y) × z
+    if (PREC[o2] < PREC[o1] || (o1 === SYM.sub && PREC[o2] === 1) || (o1 === SYM.div && PREC[o2] === 2)) {
+      BRACKETED.push({ first: 'right', o1, o2, paren: true });                            // x × (y + z), x − (y + z), x ÷ (y × z)
+    }
+  }));
+  function apply(op, a, b) {
+    if (op === SYM.add) return a + b;
+    if (op === SYM.sub) return a - b;
+    if (op === SYM.mul) return a * b;
+    return a / b;
+  }
+  // Two numbers that make exactly v with op, within the limits above, or null.
+  function pairFor(op, v) {
+    if (op === SYM.add) {
+      const lo = Math.max(1, v - 20), hi = Math.min(20, v - 1);
+      if (lo > hi) return null;
+      const a = ri(lo, hi); return [a, v - a];
+    }
+    if (op === SYM.sub) {
+      if (v < 0 || v > 19) return null;
+      const b = ri(1, 20 - v); return [v + b, b];
+    }
+    if (op === SYM.mul) {
+      const fs = [];
+      for (let a = 2; a <= 12; a++) if (v % a === 0 && v / a >= 2 && v / a <= 12) fs.push([a, v / a]);
+      return fs.length ? pick(fs) : null;
+    }
+    if (v < 2 || v > 12) return null;
+    const b = ri(2, 12); return [v * b, b];
+  }
+  // Two numbers for op with no particular result needed.
+  function freePair(op) {
+    if (op === SYM.add) return [ri(1, 20), ri(1, 20)];
+    if (op === SYM.sub) { const a = ri(2, 20); return [a, ri(1, a)]; }
+    if (op === SYM.mul) return [ri(2, 12), ri(2, 12)];
+    const b = ri(2, 12); return [b * ri(2, 12), b];
+  }
+  function buildOrder(t) {
+    const innerLeft = t.first === 'left';
+    const root = innerLeft ? t.o2 : t.o1;    // done last
+    const inner = innerLeft ? t.o1 : t.o2;   // done first
+    let pair = null, lit, iv;
+    if (root === SYM.mul) {
+      iv = ri(2, 12); pair = pairFor(inner, iv); lit = ri(2, 12);
+    } else if (root === SYM.div) {
+      const d = ri(2, 12), q = ri(2, 12);    // divisor and quotient, both inside the table
+      if (innerLeft) { iv = d * q; pair = pairFor(inner, iv); lit = d; }
+      else { iv = d; pair = pairFor(inner, iv); lit = d * q; }
+    } else {
+      if (root === SYM.sub && !innerLeft) { iv = ri(1, 19); pair = pairFor(inner, iv); }   // x − (…) must stay 0 or more
+      else pair = freePair(inner);
+      if (!pair) return null;
+      iv = apply(inner, pair[0], pair[1]);
+      if (root === SYM.add) lit = ri(1, 20);
+      else if (innerLeft) { if (iv < 1) return null; lit = ri(1, Math.min(20, iv)); }
+      else { if (iv > 20) return null; lit = ri(Math.max(1, iv), 20); }
+    }
+    if (!pair) return null;
+    const innerText = say(pair[0], inner, pair[1]);
+    const shown = t.paren ? '(' + innerText + ')' : innerText;
+    const ans = innerLeft ? apply(root, iv, lit) : apply(root, lit, iv);
+    if (!Number.isInteger(ans) || ans < 0) return null;
+    return {
+      op: 'order', ans,
+      text: innerLeft ? say(shown, root, lit) : say(lit, root, shown),
+      first: innerText, firstVal: iv,
+      then: innerLeft ? say(iv, root, lit) : say(lit, root, iv)
+    };
+  }
+  function orderQuestion(seen) {
+    for (let n = 0; n < 60; n++) {
+      const t = Math.random() < 0.5 ? pick(PLAIN) : pick(BRACKETED);   // about half use parentheses
+      for (let i = 0; i < 40; i++) {
+        const q = buildOrder(t);
+        if (q && !seen.has(q.text)) { seen.add(q.text); return q; }
+      }
+    }
+    let q = null;
+    while (!q) q = buildOrder(PLAIN[0]);   // practically unreachable
+    return q;
+  }
+
+  // ---------- Sound ----------
+  let audioCtx = null;
+  function audio() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  // iPhone and iPad only allow sound after a tap, so the Start tap plays a silent sound to unlock it.
+  function unlockAudio() {
+    const c = audio(); if (!c) return;
+    try { const src = c.createBufferSource(); src.buffer = c.createBuffer(1, 1, 22050); src.connect(c.destination); src.start(0); } catch (e) { /* ignore */ }
+  }
+  function ding() {
+    if (state.muted) return;
+    const c = audio(); if (!c) return;
+    const t = c.currentTime;
+    [[1318.5, 0.32, 0.7], [2637, 0.08, 0.35]].forEach(([f, vol, dur]) => {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(c.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
+  function buzz() {
+    if (state.muted) return;
+    const c = audio(); if (!c) return;
+    const t = c.currentTime, dur = 0.45;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1100;
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.015);
+    g.gain.setValueAtTime(0.22, t + dur - 0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    lp.connect(g).connect(c.destination);
+    [110, 116.5].forEach(f => {
+      const o = c.createOscillator();
+      o.type = 'sawtooth'; o.frequency.value = f;
+      o.connect(lp); o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
+  function setMuted(m) {
+    state.muted = m;
+    save();
+    renderMute();
+  }
+  function renderMute() {
+    document.querySelectorAll('.mute-btn').forEach(btn => {
+      btn.setAttribute('aria-pressed', String(state.muted));
+      btn.title = state.muted ? 'Sound off (M)' : 'Sound on (M)';
+    });
+  }
+
+  // ---------- Screens and navigation ----------
+  const home = $('home'), modePage = $('modePage'), play = $('play'), sheet = $('sheet'), chart = $('chart');
+  let cur = null;           // game type shown on the game type page
+  let cameFromHome = false;
+
+  function showScreen(name) {
+    home.hidden = name !== 'home';
+    modePage.hidden = name !== 'modePage';
+    play.hidden = name !== 'play';
+    document.documentElement.classList.toggle('playing', name === 'play');
+  }
+
+  // The address ends in #/division etc. while a game type's page is open, so Back works.
+  function route() {
+    if (game) { stopTimers(game); game = null; }   // leaving in the middle of a game saves nothing
+    const id = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+    if (MODE[id]) openMode(id); else showHome();
+  }
+  function showHome() {
+    const was = cur;
+    cur = null;
+    showScreen('home');
+    document.title = 'Math Drills';
+    renderHome();
+    window.scrollTo(0, 0);
+    if (was) { const tile = home.querySelector('.tile[data-mode="' + was.id + '"]'); if (tile) tile.focus({ preventScroll: true }); }
+  }
+  function goToMode(id) {
+    cameFromHome = true;
+    history.pushState(null, '', '#/' + id);
+    route();
+  }
+  function goHome() {
+    // Step back in history when we came from the home screen, so the browser's Back button stays in step.
+    if (cameFromHome) { cameFromHome = false; history.back(); }
+    else history.replaceState(null, '', location.pathname + location.search);
+    showHome();
+  }
+
+  // ---------- Home ----------
+  function keyGlyph(m, big) {
+    const k = $('modeKey') && big ? $('modeKey') : el('span');
+    k.className = 'key' + (big ? ' big' : '') + (m.fixed ? ' paren' : m.glyph.length === 2 ? ' two' : m.glyph.length === 4 ? ' four' : '');
+    k.setAttribute('aria-hidden', 'true');
+    k.textContent = '';
+    m.glyph.forEach(g => k.append(el('span', null, g)));
+    return k;
+  }
+  function buildHome() {
+    const nav = $('groups');
+    GROUPS.forEach(g => {
+      const sec = el('section', 'group');
+      sec.append(el('h2', 'group-title', g.name));
+      const tiles = el('div', 'tiles');
+      g.ids.forEach(id => {
+        const m = MODE[id];
+        const b = el('button', 'tile');
+        b.type = 'button'; b.dataset.mode = id;
+        const txt = el('span', 'txt');
+        txt.append(el('span', 'name', m.name), el('span', 'scope'));
+        b.append(keyGlyph(m, false), txt);
+        b.insertAdjacentHTML('beforeend', '<svg class="chev" width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M2 2l8 8-8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+        tiles.append(b);
+      });
+      sec.append(tiles);
+      nav.append(sec);
+    });
+  }
+  function renderHome() {
+    home.querySelectorAll('.tile').forEach(b => {
+      const m = MODE[b.dataset.mode];
+      b.querySelector('.scope').textContent = tileLabel(m, state.scopes[m.id]);
+    });
+  }
+
+  // ---------- Game type page ----------
+  const cells = [];
+  function buildChart() {
+    const frag = document.createDocumentFragment();
+    const corner = el('div', 'corner', SYM.mul);
+    corner.setAttribute('aria-hidden', 'true');
+    frag.append(corner);
+    const hdr = (axis, n) => {
+      const b = el('button', 'hdr', String(n));
+      b.type = 'button'; b.dataset.axis = axis; b.dataset.n = n;
+      b.setAttribute('aria-label', (axis === 'top' ? 'Top number ' : 'Left number ') + n);
+      return b;
+    };
+    NUMS.forEach(n => frag.append(hdr('top', n)));
+    NUMS.forEach(b => {
+      frag.append(hdr('left', b));
+      NUMS.forEach(a => {
+        const c = el('div', 'cell', String(a * b));
+        c.setAttribute('aria-hidden', 'true');
+        cells.push({ a, b, el: c });
+        frag.append(c);
+      });
+    });
+    chart.append(frag);
+    // Bigger buttons for the same numbers, shown on narrow screens.
+    document.querySelectorAll('.chips').forEach(box => {
+      NUMS.forEach(n => {
+        const b = el('button', 'chip', String(n));
+        b.type = 'button'; b.dataset.axis = box.dataset.axis; b.dataset.n = n;
+        b.setAttribute('aria-label', (box.dataset.axis === 'top' ? 'Top number ' : 'Left number ') + n);
+        box.append(b);
+      });
+    });
+  }
+
+  function openMode(id) {
+    cur = MODE[id];
+    showScreen('modePage');
+    document.title = cur.name + ' – Math Drills';
+    keyGlyph(cur, true);
+    $('modeName').textContent = cur.name;
+    $('orderRules').hidden = !cur.fixed;
+    $('numbersBtn').hidden = !!cur.fixed;
+    setNumbersOpen(false);
+    $('chartEd').hidden = !cur.chart;
+    $('rangeEd').hidden = !cur.range;
+    $('chartTitle').hidden = $('rangeTitle').hidden = !(cur.chart && cur.range);
+    buildSheet();
+    renderMode();
+    window.scrollTo(0, 0);
+  }
+  function renderMode() { renderScope(); renderBoards(); renderLastRound(); }
+
+  function setNumbersOpen(open) {
+    $('numbersBtn').setAttribute('aria-expanded', String(open));
+    $('numbers').hidden = !open;
+  }
+
+  // A typical fact from the chart selection, for the examples in the help text.
+  function chartExample(s) {
+    const tops = maskList(s.top), lefts = maskList(s.left);
+    if (!tops.length || !lefts.length) return null;
+    const b = lefts[Math.floor(lefts.length / 2)];
+    const start = Math.floor(tops.length * 2 / 3);
+    let a = tops[start];
+    for (let i = 1; i < tops.length && a === b; i++) a = tops[(start + i) % tops.length];
+    return [a, b];
+  }
+  function rangeExample(s) {
+    let a = s.lo + Math.floor((s.hi - s.lo) * 0.36), b = s.lo + Math.floor((s.hi - s.lo) * 0.47);
+    if (a === b && b < s.hi) b++;
+    return [a, b];
+  }
+
+  function missedChartFacts() {
+    const set = new Set();
+    if (lastRound && cur && lastRound.mode === cur.id) {
+      lastRound.missed.forEach(x => { if (x.q.op === 'mul' || x.q.op === 'div') set.add(x.q.a + 'x' + x.q.b); });
+    }
+    return set;
+  }
+
+  function renderScope() {
+    const m = cur, s = state.scopes[m.id];
+    const sum = $('scopeSummary');
+    sum.hidden = !!m.fixed;
+    sum.classList.remove('warn');
+    if (!m.fixed) {
+      if (!hasFacts(m, s)) {
+        sum.textContent = 'Pick at least one top number and one left number under Choose numbers to start a game.';
+        sum.classList.add('warn');
+      } else {
+        const c = m.chart ? (s.top === FULL && s.left === FULL ? 'the full 12 × 12' : '<strong>' + chartLabel(s) + '</strong>') : '';
+        const r = m.range ? (s.lo === LO && s.hi === HI ? 'numbers from 1 to 100'
+          : s.lo === s.hi ? 'only the number <strong>' + s.lo + '</strong>'
+          : 'numbers from <strong>' + s.lo + ' to ' + s.hi + '</strong>') : '';
+        let html = m.chart && m.range ? 'Practicing ' + c + ' for × and ÷, and ' + r + ' for + and −.' : 'Practicing ' + (c || r) + '.';
+        if (!isFull(m, s)) html += ' Scores go on the Any range lists only.';
+        sum.innerHTML = html;
+      }
+    }
+
+    if (m.chart) {
+      $('numbers').querySelectorAll('[data-n]').forEach(b => {
+        b.setAttribute('aria-pressed', String(!!(s[b.dataset.axis] & (1 << (b.dataset.n - 1)))));
+      });
+      const miss = missedChartFacts();
+      cells.forEach(({ a, b, el: c }) => {
+        c.classList.toggle('on', !!(s.top & (1 << (a - 1))) && !!(s.left & (1 << (b - 1))));
+        c.classList.toggle('miss', miss.has(a + 'x' + b));
+      });
+      $('ringKey').hidden = miss.size === 0;
+      const ex = chartExample(s);
+      const mul = ex ? ', like ' + simpleQuestion('mul', ex[0], ex[1]).text : '';
+      const div = ex ? ', like ' + simpleQuestion('div', ex[0], ex[1]).text : '';
+      let help;
+      if (m.id === 'mul') help = 'Questions are a top number × a left number' + mul + '.';
+      else if (m.id === 'div') help = 'Questions are a chart number ÷ its left number' + div + ', so every answer is a whole number.';
+      else help = 'Multiplication is a top number × a left number' + mul + '. Division is a chart number ÷ its left number' + div + '.';
+      $('chartHelp').textContent = help + ' Turn numbers on or off to choose which facts come up.';
+      const count = maskList(s.top).length * maskList(s.left).length;
+      $('factCount').innerHTML = '<b>' + count + '</b> ' + (count === 1 ? 'fact' : 'facts') + ' picked';
+    }
+
+    if (m.range) {
+      $('loInput').value = s.lo;
+      $('hiInput').value = s.hi;
+      $('rangeEd').querySelectorAll('[data-preset]').forEach(b => {
+        b.setAttribute('aria-pressed', String(b.dataset.preset === s.lo + '-' + s.hi));
+      });
+      const [a, b] = rangeExample(s);
+      const add = say(a, SYM.add, b), sub = say(a + b, SYM.sub, b);
+      let help;
+      if (m.id === 'add') help = 'Each question adds two numbers from this range, like ' + add + '.';
+      else if (m.id === 'sub') help = 'Each question undoes an addition of two numbers from this range, like ' + sub + ', so answers are never negative.';
+      else help = 'Addition adds two numbers from this range, like ' + add + '. Subtraction undoes one, like ' + sub + ', so answers are never negative.';
+      $('rangeHelp').textContent = help;
+    }
+
+    sheet.querySelectorAll('.start').forEach(b => { b.disabled = !hasFacts(m, s); });
+  }
+
+  function buildSheet() {
+    const m = cur;
+    sheet.textContent = '';
+    TIMES.forEach(t => {
+      const col = el('section', 'col');
+      col.dataset.t = t;
+      col.innerHTML =
+        '<h2 class="limit"><span class="n">' + t + '</span><span class="u">seconds</span></h2>' +
+        '<button type="button" class="start" data-t="' + t + '">Start</button>' +
+        (m.fixed
+          ? '<h3>Top 5</h3><ol class="board" data-kind="top"></ol>'
+          : '<h3>Full range</h3><ol class="board" data-kind="full"></ol><h3>Any range</h3><ol class="board" data-kind="any"></ol>') +
+        '<div class="reset-wrap">' +
+          '<button type="button" class="reset">Reset scores</button>' +
+          '<span class="confirm" hidden><span class="q"></span>' +
+            '<button type="button" class="small-btn danger yes">Erase</button>' +
+            '<button type="button" class="small-btn no">Keep</button>' +
+          '</span>' +
+        '</div>';
+      col.querySelector('.start').setAttribute('aria-label', 'Start ' + t + '-second ' + m.word + ' game');
+      col.querySelector('.q').textContent = 'Erase ' + t + '-second ' + m.word + ' scores?';
+      sheet.append(col);
+    });
+  }
+
+  function renderBoards() {
+    const m = cur;
+    TIMES.forEach(t => {
+      const col = sheet.querySelector('.col[data-t="' + t + '"]');
+      const l = lists(m, state.boards[m.id][t]);
+      Object.keys(l).forEach(kind => {
+        const ol = col.querySelector('.board[data-kind="' + kind + '"]');
+        ol.textContent = '';
+        for (let i = 0; i < 5; i++) {
+          const g = l[kind][i];
+          const li = el('li');
+          if (g) {
+            li.append(el('span', 'rk', String(i + 1)), el('span', 'sc', fmtScore(g.score)),
+              el('span', 'rg', kind === 'any' ? scopeLabel(m, g.scope) : fmtDate(g.at)));
+            li.title = g.right + ' right, ' + g.wrong + ' wrong, ' + fmtDate(g.at) + (kind === 'any' ? ', ' + scopeLabel(m, g.scope) : '');
+            if (g.id === lastId) li.classList.add('fresh');
+          } else {
+            li.className = 'empty';
+            li.append(el('span', 'rk', String(i + 1)), el('span', 'sc', '–'), el('span', 'rg', ''));
+          }
+          ol.append(li);
+        }
+      });
+    });
+  }
+
+  function renderLastRound() {
+    const panel = $('lastRound'), r = lastRound;
+    if (!r || !cur || r.mode !== cur.id) { panel.hidden = true; return; }
+    panel.hidden = false;
+    const sum = $('lrSum');
+    sum.textContent = '';
+    sum.append(el('b', null, 'Score ' + fmtScore(r.score)));
+    sum.append(' in a ' + r.t + '-second ' + cur.word + ' game' +
+      (cur.fixed ? '' : ', ' + (r.full ? 'full range' : scopeLabel(cur, r.scope))) +
+      '. ' + r.right + ' right, ' + r.wrong + ' wrong.');
+
+    // Group repeat misses of the same question together.
+    const groups = new Map();
+    r.missed.forEach(x => {
+      if (!groups.has(x.q.text)) groups.set(x.q.text, { q: x.q, typed: [] });
+      groups.get(x.q.text).typed.push(x.typed);
+    });
+    const ul = $('lrMissed');
+    ul.textContent = '';
+    let anyChart = false;
+    groups.forEach(g => {
+      const li = el('li');
+      li.append(g.q.text + ' = ', el('b', null, String(g.q.ans)));
+      const s = el('s', null, g.typed.join(', '));
+      s.setAttribute('aria-label', 'you typed ' + g.typed.join(', '));
+      li.append(s);
+      if (g.q.op === 'order') {
+        li.append(el('span', 'work', 'First ' + g.q.first + ' = ' + g.q.firstVal + ', then ' + g.q.then + ' = ' + g.q.ans + '.'));
+      }
+      if (g.q.op === 'mul' || g.q.op === 'div') anyChart = true;
+      ul.append(li);
+    });
+    ul.hidden = groups.size === 0;
+    $('lrNote').textContent = groups.size === 0 ? 'No misses. Clean round.'
+      : 'Missed questions with the right answer and what you typed.' + (anyChart ? ' Missed × and ÷ facts are also circled on the chart under Choose numbers.' : '');
+  }
+
+  // ---------- Game ----------
+  const timerEl = $('timer'), scoreEl = $('score'), problemEl = $('problem'), markEl = $('mark'), answerEl = $('answer');
+  let game = null;
+
+  // setTimeout that is dropped if its game has ended or been quit.
+  function later(fn, ms) {
+    const g = game;
+    const id = setTimeout(() => { g.timers.delete(id); if (game === g) fn(); }, ms);
+    g.timers.add(id);
+  }
+  function stopTimers(g) {
+    clearInterval(g.interval);
+    g.timers.forEach(clearTimeout);
+    g.timers.clear();
+  }
+
+  function startGame(t) {
+    const m = cur, s = state.scopes[m.id];
+    if (game || !hasFacts(m, s)) return;
+    unlockAudio();
+    game = {
+      t, m, scope: Object.assign({}, s), full: isFull(m, s), ask: makeAsker(m, s),
+      score: 0, right: 0, wrong: 0, missed: [],
+      phase: 'countdown', endAt: 0, cur: null, typed: '', timers: new Set(), interval: 0
+    };
+    if (document.activeElement) document.activeElement.blur();
+    showScreen('play');
+    $('hud').hidden = false; $('stage').hidden = false; $('keypad').hidden = false; $('final').hidden = true;
+    timerEl.textContent = fmtTime(t * 1000); timerEl.classList.remove('low');
+    scoreEl.textContent = '0'; scoreEl.classList.remove('bump', 'drop');
+    markEl.textContent = 'Get ready'; markEl.className = 'soft';
+    problemEl.className = 'count'; problemEl.style.fontSize = '';
+    answerEl.classList.remove('wrong');
+    renderTyped();
+
+    let n = 3;
+    const step = () => {
+      if (n > 0) { problemEl.textContent = n; n--; later(step, 1000); }
+      else begin();
+    };
+    step();
+  }
+
+  function begin() {
+    game.phase = 'playing';
+    problemEl.className = '';
+    game.endAt = performance.now() + game.t * 1000;
+    game.interval = setInterval(tick, 100);
+    nextQuestion();
+  }
+
+  function tick() {
+    if (!game || game.phase === 'done' || game.phase === 'countdown') return;
+    const left = game.endAt - performance.now();
+    timerEl.textContent = fmtTime(left);
+    timerEl.classList.toggle('low', left <= 10000);
+    if (left <= 0) finish();
+  }
+
+  // Shrinks long questions, such as order of operations with the answer shown, to fit the screen.
+  function fitProblem() {
+    problemEl.style.fontSize = '';
+    const max = $('stage').clientWidth - 8;
+    const w = problemEl.scrollWidth;
+    if (max > 0 && w > max) problemEl.style.fontSize = Math.floor(parseFloat(getComputedStyle(problemEl).fontSize) * max / w) + 'px';
+  }
+
+  function renderTyped() {
+    answerEl.textContent = game ? game.typed : '';
+    answerEl.classList.toggle('typing', !!game && game.phase === 'playing');
+  }
+
+  function nextQuestion() {
+    game.cur = game.ask();
+    problemEl.textContent = game.cur.text;
+    fitProblem();
+    markEl.textContent = ''; markEl.className = '';
+    game.typed = '';
+    answerEl.classList.remove('wrong');
+    renderTyped();
+  }
+
+  function updateScore(cls) {
+    scoreEl.textContent = fmtScore(game.score);
+    scoreEl.classList.remove('bump', 'drop');
+    void scoreEl.offsetWidth;   // restart the animation
+    scoreEl.classList.add(cls);
+  }
+
+  // A key from the on-screen pad or the keyboard: a digit, 'back' or 'enter'.
+  function press(key) {
+    if (!game || game.phase !== 'playing') return;
+    if (key === 'enter') { submit(); return; }
+    if (key === 'back') game.typed = game.typed.slice(0, -1);
+    else if (game.typed.length < 3) game.typed = game.typed === '0' ? key : game.typed + key;
+    renderTyped();
+  }
+
+  function submit() {
+    if (game.typed === '') return;                     // Enter with nothing typed does nothing
+    if (performance.now() >= game.endAt) { finish(); return; }
+    const q = game.cur, v = Number(game.typed);
+    if (v === q.ans) {
+      game.score++; game.right++;
+      ding();
+      updateScore('bump');
+      nextQuestion();
+    } else {
+      game.score--; game.wrong++;
+      game.missed.push({ q, typed: v });
+      buzz();
+      updateScore('drop');
+      game.phase = 'wrong';
+      answerEl.classList.add('wrong');
+      renderTyped();
+      markEl.textContent = '✕'; markEl.className = '';
+      problemEl.textContent = q.text + ' = ';
+      problemEl.append(el('span', 'ans', String(q.ans)));
+      fitProblem();
+      later(() => {                                    // the clock keeps running during this pause
+        if (game.phase === 'wrong') { game.phase = 'playing'; nextQuestion(); }
+      }, 1000);
+    }
+  }
+
+  function finish() {
+    const g = game;
+    if (!g || g.phase === 'done') return;
+    g.phase = 'done';
+    stopTimers(g);
+    timerEl.textContent = '0:00';
+
+    const entry = { id: newId(), score: g.score, right: g.right, wrong: g.wrong, at: new Date().toISOString(), scope: g.scope };
+    const games = state.boards[g.m.id][g.t];
+    games.push(entry);
+    const l = lists(g.m, games);
+    const ranks = Object.keys(l).map(k => l[k].indexOf(entry));
+    state.boards[g.m.id][g.t] = prune(g.m, games);
+    save();
+    const best = ranks.some(r => r === 0), top5 = ranks.some(r => r >= 0);
+    lastId = top5 ? entry.id : null;
+    lastRound = { mode: g.m.id, t: g.t, scope: g.scope, full: g.full, score: g.score, right: g.right, wrong: g.wrong, missed: g.missed };
+
+    $('hud').hidden = true; $('stage').hidden = true; $('keypad').hidden = true; $('final').hidden = false;
+    $('fScore').textContent = fmtScore(g.score);
+    $('fSub').textContent = g.right + ' right, ' + g.wrong + ' wrong';
+    const msg = $('fMsg');
+    msg.className = 'f-msg';
+    if (g.score < 0) { msg.textContent = 'You are a miserable failure.'; msg.classList.add('fail'); }
+    else if (g.score > 0 && best) { msg.textContent = 'New best score!'; msg.classList.add('good'); }
+    else if (g.score > 0 && top5) { msg.textContent = 'That’s a top 5 score.'; msg.classList.add('good'); }
+    else msg.textContent = '';
+
+    later(leaveGame, 2000);
+  }
+
+  // Back to the game type page. A game still in progress is dropped without saving.
+  function leaveGame() {
+    if (!game) return;
+    const t = game.t;
+    stopTimers(game);
+    game = null;
+    showScreen('modePage');
+    renderMode();
+    window.scrollTo(0, 0);
+    const btn = sheet.querySelector('.start[data-t="' + t + '"]');
+    if (btn && !btn.disabled) btn.focus({ preventScroll: true });
+  }
+
+  function buildKeypad() {
+    const pad = $('keypad');
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'enter'].forEach(k => {
+      const b = el('button', 'k' + (k === 'enter' ? ' enter' : ''));
+      b.type = 'button'; b.dataset.key = k; b.tabIndex = -1;
+      if (k === 'back') {
+        b.setAttribute('aria-label', 'Delete');
+        b.innerHTML = '<svg width="34" height="24" viewBox="0 0 34 24" aria-hidden="true"><path d="M11 2h19a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H11l-9-10z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M16 8l8 8M24 8l-8 8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>';
+      } else b.textContent = k === 'enter' ? 'Enter' : k;
+      pad.append(b);
+    });
+    // Respond on touch-down so fast tapping never drops a key.
+    pad.addEventListener('pointerdown', (e) => {
+      const b = e.target.closest('.k');
+      if (!b) return;
+      e.preventDefault();
+      b.classList.add('down');
+      press(b.dataset.key);
+    });
+    const lift = () => pad.querySelectorAll('.k.down').forEach(b => b.classList.remove('down'));
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => pad.addEventListener(t, lift));
+    // Screen readers activate buttons with a click that has no pointer behind it.
+    pad.addEventListener('click', (e) => {
+      const b = e.target.closest('.k');
+      if (b && e.detail === 0) press(b.dataset.key);
+    });
+  }
+
+  // ---------- Backup code ----------
+  // The code packs every saved game into bits and writes them with the letters and digits
+  // 0-9 A-Z (minus I, L, O and U, which are easy to misread), after the prefix MD1.
+  const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+  const CODE_PREFIX = 'MD1';
+  const EPOCH = Date.UTC(2024, 0, 1);
+  function crc16(bits, n) {
+    let crc = 0xFFFF;
+    for (let i = 0; i < n; i += 8) {
+      let byte = 0;
+      for (let j = 0; j < 8; j++) byte = (byte << 1) | (i + j < n ? bits[i + j] : 0);
+      crc ^= byte << 8;
+      for (let k = 0; k < 8; k++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+    }
+    return crc;
+  }
+  function encodeBackup(boards) {
+    const bits = [];
+    const put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push(Math.floor(v / Math.pow(2, i)) % 2); };
+    const games = [];
+    MODES.forEach((m, mi) => TIMES.forEach((t, ti) => boards[m.id][t].forEach(g => games.push([m, mi, ti, g]))));
+    put(1, 8);                   // format version
+    put(games.length, 10);
+    games.forEach(([m, mi, ti, g]) => {
+      put(mi, 3); put(ti, 2);
+      put(clamp(g.score, -1023, 1023) + 1023, 11);
+      put(clamp(g.right, 0, 1023), 10); put(clamp(g.wrong, 0, 1023), 10);
+      put(clamp(Math.floor((Date.parse(g.at) - EPOCH) / 60000), 0, Math.pow(2, 26) - 1), 26);   // minutes since 2024
+      if (m.chart) { put(g.scope.top, 12); put(g.scope.left, 12); }
+      if (m.range) { put(g.scope.lo, 7); put(g.scope.hi, 7); }
+    });
+    put(crc16(bits, bits.length), 16);   // check value, so a partly pasted code is caught
+    let code = CODE_PREFIX;
+    for (let i = 0; i < bits.length; i += 5) {
+      let v = 0;
+      for (let j = 0; j < 5; j++) v = v * 2 + (bits[i + j] || 0);
+      code += B32[v];
+    }
+    return code;
+  }
+  // Full set of leaderboards from a pasted code, or null if it isn't a complete, valid code.
+  function decodeBackup(text) {
+    const s = String(text).toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
+    if (s.indexOf(CODE_PREFIX) !== 0) return null;
+    const bits = [];
+    for (const ch of s.slice(CODE_PREFIX.length)) {
+      const v = B32.indexOf(ch);
+      if (v < 0) return null;
+      for (let i = 4; i >= 0; i--) bits.push((v >> i) & 1);
+    }
+    let p = 0;
+    const get = (n) => {
+      if (p + n > bits.length) throw new Error('short');
+      let v = 0;
+      for (let i = 0; i < n; i++) v = v * 2 + bits[p++];
+      return v;
+    };
+    try {
+      if (get(8) !== 1) return null;
+      const count = get(10);
+      const boards = blankBoards();
+      for (let k = 0; k < count; k++) {
+        const mi = get(3), ti = get(2);
+        if (mi >= MODES.length || ti >= TIMES.length) return null;
+        const m = MODES[mi];
+        const g = { score: get(11) - 1023, right: get(10), wrong: get(10), at: new Date(EPOCH + get(26) * 60000).toISOString(), scope: {} };
+        if (m.chart) { g.scope.top = get(12); g.scope.left = get(12); }
+        if (m.range) { g.scope.lo = get(7); g.scope.hi = get(7); }
+        const clean = cleanGame(m, g);
+        if (!clean) return null;
+        boards[m.id][TIMES[ti]].push(clean);
+      }
+      const end = p;
+      if (get(16) !== crc16(bits, end)) return null;
+      if (bits.length - p >= 5) return null;   // extra characters after the code
+      MODES.forEach(m => TIMES.forEach(t => { boards[m.id][t] = prune(m, boards[m.id][t]); }));
+      return boards;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function backupMsg(text, isError) {
+    const m = $('backupMsg');
+    m.textContent = text;
+    m.classList.toggle('err', !!isError);
+  }
+  let pendingRestore = null;
+  function applyRestore(boards) {
+    state.boards = boards;
+    lastId = null;
+    save();
+    $('codeIn').value = '';
+    backupMsg('Restored ' + plural(countGames(boards)) + '.');
+  }
+
+  // ---------- Events ----------
+  document.querySelectorAll('.mute-btn').forEach(b => b.addEventListener('click', () => setMuted(!state.muted)));
+  $('groups').addEventListener('click', (e) => {
+    const tile = e.target.closest('.tile');
+    if (tile) goToMode(tile.dataset.mode);
+  });
+  $('backBtn').addEventListener('click', goHome);
+  window.addEventListener('hashchange', route);
+
+  $('numbersBtn').addEventListener('click', () => setNumbersOpen($('numbersBtn').getAttribute('aria-expanded') !== 'true'));
+  $('numbers').addEventListener('click', (e) => {
+    const s = state.scopes[cur.id];
+    const num = e.target.closest('[data-n]');
+    const fill = e.target.closest('[data-fill]');
+    const preset = e.target.closest('[data-preset]');
+    if (num) s[num.dataset.axis] ^= 1 << (num.dataset.n - 1);
+    else if (fill) s[fill.dataset.axis] = fill.dataset.fill === 'all' ? FULL : 0;
+    else if (preset) { const v = preset.dataset.preset.split('-').map(Number); s.lo = v[0]; s.hi = v[1]; }
+    else if (e.target.closest('#resetNumbers')) state.scopes[cur.id] = defaultScope(cur);
+    else return;
+    save();
+    renderScope();
+  });
+
+  // Range steppers: tap to move by one, hold to keep going.
+  function stepRange(end, d) {
+    const s = state.scopes[cur.id];
+    if (end === 'lo') { s.lo = clamp(s.lo + d, LO, HI); if (s.lo > s.hi) s.hi = s.lo; }
+    else { s.hi = clamp(s.hi + d, LO, HI); if (s.hi < s.lo) s.lo = s.hi; }
+    save();
+    renderScope();
+  }
+  let hold = null;
+  const stopHold = () => { if (hold) { clearTimeout(hold); hold = null; } };
+  document.querySelectorAll('.st-btn').forEach(btn => {
+    const end = btn.closest('.stepper').dataset.end, d = Number(btn.dataset.step);
+    btn.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      stopHold();
+      stepRange(end, d);
+      let n = 0;
+      const again = () => { stepRange(end, d); n++; hold = setTimeout(again, n > 8 ? 45 : 110); };
+      hold = setTimeout(again, 420);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => btn.addEventListener(t, stopHold));
+    btn.addEventListener('click', (e) => { if (e.detail === 0) stepRange(end, d); });   // keyboard
+  });
+  [['lo', 'loInput'], ['hi', 'hiInput']].forEach(([end, id]) => {
+    $(id).addEventListener('change', () => {
+      const s = state.scopes[cur.id];
+      const n = parseInt($(id).value, 10);
+      s[end] = clamp(Number.isNaN(n) ? (end === 'lo' ? LO : HI) : n, LO, HI);
+      if (s.lo > s.hi) { if (end === 'lo') s.hi = s.lo; else s.lo = s.hi; }
+      save();
+      renderScope();
+    });
+  });
+
+  sheet.addEventListener('click', (e) => {
+    const start = e.target.closest('.start');
+    if (start) { startGame(Number(start.dataset.t)); return; }
+    const col = e.target.closest('.col');
+    if (!col) return;
+    const resetBtn = col.querySelector('.reset'), confirm = col.querySelector('.confirm');
+    if (e.target.closest('.reset')) {
+      resetBtn.hidden = true; confirm.hidden = false;
+      col.querySelector('.no').focus();
+    } else if (e.target.closest('.yes')) {
+      state.boards[cur.id][col.dataset.t] = [];
+      save();
+      renderBoards();
+      confirm.hidden = true; resetBtn.hidden = false; resetBtn.focus();
+    } else if (e.target.closest('.no')) {
+      confirm.hidden = true; resetBtn.hidden = false; resetBtn.focus();
+    }
+  });
+
+  $('quitBtn').addEventListener('click', leaveGame);
+  play.addEventListener('pointerdown', (e) => { if (!e.target.closest('button')) e.preventDefault(); });
+  window.addEventListener('resize', () => { if (game && game.phase !== 'done') fitProblem(); });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (game) {
+      if (e.key === 'Escape') { e.preventDefault(); leaveGame(); return; }
+      if (/^[0-9]$/.test(e.key)) { e.preventDefault(); press(e.key); return; }
+      if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); press('back'); return; }
+      if (e.key === 'Enter') { e.preventDefault(); press('enter'); return; }
+    }
+    const typingInField = /^(INPUT|TEXTAREA)$/.test((document.activeElement || {}).tagName);
+    if ((e.key === 'm' || e.key === 'M') && !e.repeat && !typingInField) {
+      e.preventDefault();
+      setMuted(!state.muted);
+    }
+  });
+
+  $('copyCode').addEventListener('click', async () => {
+    const n = countGames(state.boards);
+    $('restoreConfirm').hidden = true; pendingRestore = null;
+    if (n === 0) { $('codeOut').hidden = true; backupMsg('There are no high scores to back up yet.'); return; }
+    const code = encodeBackup(state.boards);
+    const out = $('codeOut');
+    out.value = code;
+    out.hidden = false;
+    let copied = false;
+    try { await navigator.clipboard.writeText(code); copied = true; } catch (err) { /* clipboard blocked */ }
+    if (copied) backupMsg('Copied a code with ' + plural(n) + '. Paste it somewhere safe, or into Restore on another device.');
+    else { out.focus(); out.select(); backupMsg('Copy the code above. It holds ' + plural(n) + '.'); }
+  });
+  $('codeOut').addEventListener('focus', () => $('codeOut').select());
+
+  $('restoreBtn').addEventListener('click', () => {
+    const text = $('codeIn').value.trim();
+    $('restoreConfirm').hidden = true; pendingRestore = null;
+    if (!text) { backupMsg('Paste a backup code first.', true); return; }
+    const boards = decodeBackup(text);
+    if (!boards) { backupMsg('That isn’t a complete backup code, so nothing was changed. Check that the whole code was pasted.', true); return; }
+    if (countGames(state.boards) === 0) { applyRestore(boards); return; }   // nothing to overwrite
+    pendingRestore = boards;
+    $('restoreQ').textContent = 'Replace all current high scores with the ' + plural(countGames(boards)) + ' in this code?';
+    backupMsg('');
+    $('restoreConfirm').hidden = false;
+    $('restoreNo').focus();
+  });
+  $('restoreYes').addEventListener('click', () => {
+    if (!pendingRestore) return;
+    const b = pendingRestore; pendingRestore = null;
+    $('restoreConfirm').hidden = true;
+    applyRestore(b);
+  });
+  $('restoreNo').addEventListener('click', () => {
+    pendingRestore = null;
+    $('restoreConfirm').hidden = true;
+    backupMsg('Restore canceled. Your scores weren’t changed.');
+  });
+
+  // ---------- Start ----------
+  // Show the on-screen number pad on touch screens.
+  if (window.matchMedia && matchMedia('(pointer: coarse)').matches) document.documentElement.classList.add('touch');
+  window.addEventListener('touchstart', () => document.documentElement.classList.add('touch'), { once: true, passive: true });
+
+  buildHome();
+  buildChart();
+  buildKeypad();
+  renderMute();
+  if (!storageOK) $('storageNote').hidden = false;
+  route();
+
+  // Works offline once installed from a web address (not when opened as a file).
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
+  if (storageOK && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+})();
+</script>
+</body>
+</html>
