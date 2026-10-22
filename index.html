@@ -204,7 +204,7 @@
   .tool[aria-expanded="true"] .chev { transform: rotate(180deg); }
 
   /* Choose numbers */
-  .editor + .editor { margin-top: 22px; padding-top: 22px; border-top: 2px solid var(--rule); }
+  #chartEd:not([hidden]) + #rangeEd { margin-top: 22px; padding-top: 22px; border-top: 2px solid var(--rule); }
   .ed-title { margin: 0 0 12px; font-size: 18px; font-weight: 900; }
   .help { margin: 0 0 14px; }
   .chart-ed { display: grid; grid-template-columns: minmax(0, 460px) minmax(220px, 1fr); gap: 28px; align-items: start; }
@@ -438,6 +438,18 @@
     </div>
     <p class="backup-msg" id="backupMsg" role="status"></p>
   </section>
+
+  <section class="panel erase" aria-labelledby="eraseTitle">
+    <h2 class="panel-title" id="eraseTitle">Erase everything</h2>
+    <p class="backup-text">Deletes every high score, number choice and sound setting saved on this device. Copy a backup code first if you might want the scores back.</p>
+    <div class="backup-row"><button type="button" class="small-btn danger" id="eraseBtn">Erase everything</button></div>
+    <div class="confirm-row" id="eraseConfirm" hidden>
+      <span>Are you sure? This can’t be undone.</span>
+      <button type="button" class="small-btn danger" id="eraseYes">Yes, erase everything</button>
+      <button type="button" class="small-btn" id="eraseNo">Cancel</button>
+    </div>
+    <p class="backup-msg" id="eraseMsg" role="status"></p>
+  </section>
 </main>
 
 <main id="modePage" class="screen" hidden>
@@ -486,25 +498,25 @@
       <h2 class="ed-title" id="rangeTitle">+ and − numbers</h2>
       <p class="help" id="rangeHelp"></p>
       <div class="steppers">
-        <span class="st-label">From</span>
+        <span class="st-label">Within</span>
+        <div class="stepper" data-end="hi">
+          <button type="button" class="st-btn" data-step="-1" aria-label="Lower the biggest total">−</button>
+          <input id="hiInput" type="number" inputmode="numeric" min="2" max="100" aria-label="Biggest total">
+          <button type="button" class="st-btn" data-step="1" aria-label="Raise the biggest total">+</button>
+        </div>
+        <span class="st-label">Smallest number</span>
         <div class="stepper" data-end="lo">
           <button type="button" class="st-btn" data-step="-1" aria-label="Lower the smallest number">−</button>
-          <input id="loInput" type="number" inputmode="numeric" min="1" max="100" aria-label="Smallest number">
+          <input id="loInput" type="number" inputmode="numeric" min="1" max="50" aria-label="Smallest number">
           <button type="button" class="st-btn" data-step="1" aria-label="Raise the smallest number">+</button>
-        </div>
-        <span class="st-label">to</span>
-        <div class="stepper" data-end="hi">
-          <button type="button" class="st-btn" data-step="-1" aria-label="Lower the biggest number">−</button>
-          <input id="hiInput" type="number" inputmode="numeric" min="1" max="100" aria-label="Biggest number">
-          <button type="button" class="st-btn" data-step="1" aria-label="Raise the biggest number">+</button>
         </div>
       </div>
       <div class="presets">
-        <button type="button" class="preset" data-preset="1-10">1–10</button>
-        <button type="button" class="preset" data-preset="1-20">1–20</button>
-        <button type="button" class="preset" data-preset="1-50">1–50</button>
-        <button type="button" class="preset" data-preset="1-100">1–100</button>
-        <button type="button" class="preset" data-preset="10-99">10–99</button>
+        <button type="button" class="preset" data-preset="1-10">Within 10</button>
+        <button type="button" class="preset" data-preset="1-20">Within 20</button>
+        <button type="button" class="preset" data-preset="1-50">Within 50</button>
+        <button type="button" class="preset" data-preset="1-100">Within 100</button>
+        <button type="button" class="preset" data-preset="10-100">Two-digit within 100</button>
       </div>
     </div>
     <button type="button" class="small-btn reset-full" id="resetNumbers">Reset to full</button>
@@ -548,7 +560,7 @@
   const TIMES = [30, 60, 90, 120];
   const NUMS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   const FULL = 4095;          // all twelve numbers picked on a chart axis (one bit per number)
-  const LO = 1, HI = 100;     // limits of the + and − number range
+  const LO = 1, HI = 100;     // + and −: numbers start at LO, and every sum (or subtraction's starting number) is HI or less
   const NB = ' ';
   const SYM = { add: '+', sub: '−', mul: '×', div: '÷' };
 
@@ -583,7 +595,6 @@
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
   const maskList = (mask) => NUMS.filter(n => mask & (1 << (n - 1)));
-  const span = (lo, hi) => { const r = []; for (let n = lo; n <= hi; n++) r.push(n); return r; };
   const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
@@ -628,8 +639,8 @@
       if (!Number.isInteger(s.top) || !Number.isInteger(s.left) || s.top < 0 || s.top > FULL || s.left < 0 || s.left > FULL) return null;
       out.top = s.top; out.left = s.left;
     }
-    if (m.range) {
-      if (!Number.isInteger(s.lo) || !Number.isInteger(s.hi) || s.lo < LO || s.hi > HI || s.lo > s.hi) return null;
+    if (m.range) {   // lo: smallest number used; hi: biggest sum, which is also the biggest number subtracted from
+      if (!Number.isInteger(s.lo) || !Number.isInteger(s.hi) || s.lo < LO || s.hi > HI || 2 * s.lo > s.hi) return null;
       out.lo = s.lo; out.hi = s.hi;
     }
     return out;
@@ -639,21 +650,22 @@
   const chartLabel = (s) => (!s.top || !s.left) ? 'no numbers'
     : (s.top === FULL && s.left === FULL) ? '12 × 12'
     : compress(maskList(s.top)) + ' × ' + compress(maskList(s.left));
-  const rangeLabel = (s) => s.lo === s.hi ? String(s.lo) : s.lo + '–' + s.hi;
+  const rangeLabel = (s) => 'within ' + s.hi + (s.lo > LO ? ', from ' + s.lo : '');
+  const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
   function scopeLabel(m, s) {
     if (m.fixed || isFull(m, s)) return 'Full range';
     if (m.chart && m.range) return chartLabel(s) + ', ' + rangeLabel(s);
-    return m.chart ? chartLabel(s) : rangeLabel(s);
+    return m.chart ? chartLabel(s) : cap(rangeLabel(s));
   }
   function tileLabel(m, s) {
     if (m.fixed) return '3 numbers, 2 steps';
     if (m.chart && m.range) return isFull(m, s) ? 'Full range' : chartLabel(s) + ', ' + rangeLabel(s);
     if (m.chart) return s.top === FULL && s.left === FULL ? 'Full 12 × 12' : chartLabel(s);
-    return 'Numbers ' + rangeLabel(s);
+    return cap(rangeLabel(s));
   }
 
   // ---------- Saved data (this device's browser storage) ----------
-  const STORE_KEY = 'mathDrills.v1';
+  const STORE_KEY = 'mathDrills.v2';   // v1 used a different + and − range, so it starts fresh
   const storageOK = (() => {
     try { localStorage.setItem('__md_test', '1'); localStorage.removeItem('__md_test'); return true; }
     catch (e) { return false; }
@@ -761,10 +773,10 @@
 
   function makeAsker(m, s) {
     if (m.fixed) { const seen = new Set(); return () => orderQuestion(seen); }
-    const pairs = (as, bs) => { const out = []; as.forEach(a => bs.forEach(b => out.push(a * 1000 + b))); return out; };
-    const nums = m.range ? span(s.lo, s.hi) : null;
-    const chartPairs = m.chart ? pairs(maskList(s.top), maskList(s.left)) : null;
-    const rangePairs = m.range ? pairs(nums, nums) : null;
+    const chartPairs = [], rangePairs = [];
+    if (m.chart) maskList(s.top).forEach(a => maskList(s.left).forEach(b => chartPairs.push(a * 1000 + b)));
+    // + and −: both numbers at least lo, and their sum at most hi (so 88 + 6 and 100 − 88 are in, 88 + 13 is not).
+    if (m.range) for (let a = s.lo; a <= s.hi - s.lo; a++) for (let b = s.lo; a + b <= s.hi; b++) rangePairs.push(a * 1000 + b);
     const decks = {};
     m.ops.forEach(op => { decks[op] = deck(op === 'add' || op === 'sub' ? rangePairs : chartPairs); });
     return () => {
@@ -1069,9 +1081,11 @@
     for (let i = 1; i < tops.length && a === b; i++) a = tops[(start + i) % tops.length];
     return [a, b];
   }
+  // A typical + and − pair: both at least lo, sum at most hi.
   function rangeExample(s) {
-    let a = s.lo + Math.floor((s.hi - s.lo) * 0.36), b = s.lo + Math.floor((s.hi - s.lo) * 0.47);
-    if (a === b && b < s.hi) b++;
+    const room = s.hi - 2 * s.lo;
+    let a = s.lo + Math.floor(room * 0.45), b = s.lo + Math.floor(room * 0.38);
+    if (a === b && a + b < s.hi) a++;
     return [a, b];
   }
 
@@ -1094,9 +1108,8 @@
         sum.classList.add('warn');
       } else {
         const c = m.chart ? (s.top === FULL && s.left === FULL ? 'the full 12 × 12' : '<strong>' + chartLabel(s) + '</strong>') : '';
-        const r = m.range ? (s.lo === LO && s.hi === HI ? 'numbers from 1 to 100'
-          : s.lo === s.hi ? 'only the number <strong>' + s.lo + '</strong>'
-          : 'numbers from <strong>' + s.lo + ' to ' + s.hi + '</strong>') : '';
+        const r = m.range ? (s.lo === LO && s.hi === HI ? 'within ' + HI
+          : 'within <strong>' + s.hi + '</strong>' + (s.lo > LO ? ', using numbers from <strong>' + s.lo + '</strong> up' : '')) : '';
         let html = m.chart && m.range ? 'Practicing ' + c + ' for × and ÷, and ' + r + ' for + and −.' : 'Practicing ' + (c || r) + '.';
         if (!isFull(m, s)) html += ' Scores go on the Any range lists only.';
         sum.innerHTML = html;
@@ -1134,9 +1147,10 @@
       const [a, b] = rangeExample(s);
       const add = say(a, SYM.add, b), sub = say(a + b, SYM.sub, b);
       let help;
-      if (m.id === 'add') help = 'Each question adds two numbers from this range, like ' + add + '.';
-      else if (m.id === 'sub') help = 'Each question undoes an addition of two numbers from this range, like ' + sub + ', so answers are never negative.';
-      else help = 'Addition adds two numbers from this range, like ' + add + '. Subtraction undoes one, like ' + sub + ', so answers are never negative.';
+      if (m.id === 'add') help = 'Sums are ' + s.hi + ' or less, like ' + add + '.';
+      else if (m.id === 'sub') help = 'Questions start from ' + s.hi + ' or less, like ' + sub + ', and answers are never negative.';
+      else help = 'Sums are ' + s.hi + ' or less, like ' + add + ', and subtraction starts from ' + s.hi + ' or less, like ' + sub + '.';
+      if (s.lo > LO) help += ' Numbers below ' + s.lo + ' are left out.';
       $('rangeHelp').textContent = help;
     }
 
@@ -1449,7 +1463,7 @@
     const put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push(Math.floor(v / Math.pow(2, i)) % 2); };
     const games = [];
     MODES.forEach((m, mi) => TIMES.forEach((t, ti) => boards[m.id][t].forEach(g => games.push([m, mi, ti, g]))));
-    put(1, 8);                   // format version
+    put(2, 8);                   // format version (1 was the earlier + and − range)
     put(games.length, 10);
     games.forEach(([m, mi, ti, g]) => {
       put(mi, 3); put(ti, 2);
@@ -1468,7 +1482,8 @@
     }
     return code;
   }
-  // Full set of leaderboards from a pasted code, or null if it isn't a complete, valid code.
+  // { boards, skipped } from a pasted code, { old: true } for a code from the earlier version,
+  // or null if it isn't a complete, valid code. Scores that don't fit the current limits are skipped and counted.
   function decodeBackup(text) {
     const s = String(text).toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
     if (s.indexOf(CODE_PREFIX) !== 0) return null;
@@ -1486,9 +1501,12 @@
       return v;
     };
     try {
-      if (get(8) !== 1) return null;
+      const version = get(8);
+      if (version === 1) return { old: true };
+      if (version !== 2) return null;
       const count = get(10);
       const boards = blankBoards();
+      let skipped = 0;
       for (let k = 0; k < count; k++) {
         const mi = get(3), ti = get(2);
         if (mi >= MODES.length || ti >= TIMES.length) return null;
@@ -1497,14 +1515,14 @@
         if (m.chart) { g.scope.top = get(12); g.scope.left = get(12); }
         if (m.range) { g.scope.lo = get(7); g.scope.hi = get(7); }
         const clean = cleanGame(m, g);
-        if (!clean) return null;
-        boards[m.id][TIMES[ti]].push(clean);
+        if (clean) boards[m.id][TIMES[ti]].push(clean);
+        else skipped++;
       }
       const end = p;
       if (get(16) !== crc16(bits, end)) return null;
       if (bits.length - p >= 5) return null;   // extra characters after the code
       MODES.forEach(m => TIMES.forEach(t => { boards[m.id][t] = prune(m, boards[m.id][t]); }));
-      return boards;
+      return { boards, skipped };
     } catch (e) {
       return null;
     }
@@ -1516,12 +1534,40 @@
     m.classList.toggle('err', !!isError);
   }
   let pendingRestore = null;
-  function applyRestore(boards) {
-    state.boards = boards;
+  function applyRestore(result) {
+    state.boards = result.boards;
     lastId = null;
     save();
     $('codeIn').value = '';
-    backupMsg('Restored ' + plural(countGames(boards)) + '.');
+    const left = result.skipped;
+    backupMsg('Restored ' + plural(countGames(result.boards)) + '.' +
+      (left ? ' ' + left + (left === 1 ? ' score was' : ' scores were') + ' left out because ' + (left === 1 ? 'it doesn’t' : 'they don’t') + ' fit the current number limits.' : ''));
+  }
+
+  // Deletes this app's saved data only; other pages on the same web address keep theirs.
+  function eraseEverything() {
+    if (storageOK) {
+      try {
+        const ours = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (/^(mathDrills\.|timesTableDrills\.|__md_test)/.test(k)) ours.push(k);
+        }
+        ours.forEach(k => localStorage.removeItem(k));
+      } catch (e) { /* storage blocked */ }
+    }
+    state.boards = blankBoards();
+    MODES.forEach(m => { state.scopes[m.id] = defaultScope(m); });
+    state.muted = false;
+    lastId = null;
+    lastRound = null;
+    pendingRestore = null;
+    $('restoreConfirm').hidden = true;
+    $('codeOut').value = ''; $('codeOut').hidden = true;
+    $('codeIn').value = '';
+    backupMsg('');
+    renderMute();
+    renderHome();
   }
 
   // ---------- Events ----------
@@ -1548,14 +1594,16 @@
     renderScope();
   });
 
-  // Range steppers: tap to move by one, hold to keep going.
-  function stepRange(end, d) {
+  // Sets one end of the + and − limits. Two of the smallest number must still fit within the biggest sum.
+  function setRange(end, v) {
     const s = state.scopes[cur.id];
-    if (end === 'lo') { s.lo = clamp(s.lo + d, LO, HI); if (s.lo > s.hi) s.hi = s.lo; }
-    else { s.hi = clamp(s.hi + d, LO, HI); if (s.hi < s.lo) s.lo = s.hi; }
+    if (end === 'lo') { s.lo = clamp(v, LO, HI / 2); if (2 * s.lo > s.hi) s.hi = 2 * s.lo; }
+    else { s.hi = clamp(v, 2 * LO, HI); if (2 * s.lo > s.hi) s.lo = Math.floor(s.hi / 2); }
     save();
     renderScope();
   }
+  // Steppers: tap to move by one, hold to keep going.
+  const stepRange = (end, d) => setRange(end, state.scopes[cur.id][end] + d);
   let hold = null;
   const stopHold = () => { if (hold) { clearTimeout(hold); hold = null; } };
   document.querySelectorAll('.st-btn').forEach(btn => {
@@ -1574,12 +1622,8 @@
   });
   [['lo', 'loInput'], ['hi', 'hiInput']].forEach(([end, id]) => {
     $(id).addEventListener('change', () => {
-      const s = state.scopes[cur.id];
       const n = parseInt($(id).value, 10);
-      s[end] = clamp(Number.isNaN(n) ? (end === 'lo' ? LO : HI) : n, LO, HI);
-      if (s.lo > s.hi) { if (end === 'lo') s.hi = s.lo; else s.lo = s.hi; }
-      save();
-      renderScope();
+      setRange(end, Number.isNaN(n) ? (end === 'lo' ? LO : HI) : n);
     });
   });
 
@@ -1640,11 +1684,17 @@
     const text = $('codeIn').value.trim();
     $('restoreConfirm').hidden = true; pendingRestore = null;
     if (!text) { backupMsg('Paste a backup code first.', true); return; }
-    const boards = decodeBackup(text);
-    if (!boards) { backupMsg('That isn’t a complete backup code, so nothing was changed. Check that the whole code was pasted.', true); return; }
-    if (countGames(state.boards) === 0) { applyRestore(boards); return; }   // nothing to overwrite
-    pendingRestore = boards;
-    $('restoreQ').textContent = 'Replace all current high scores with the ' + plural(countGames(boards)) + ' in this code?';
+    const result = decodeBackup(text);
+    if (!result) { backupMsg('That isn’t a complete backup code, so nothing was changed. Check that the whole code was pasted.', true); return; }
+    if (result.old) { backupMsg('That code is from an earlier version of Math Drills, which used different + and − limits, so it can’t be restored.', true); return; }
+    const n = countGames(result.boards);
+    if (n === 0 && result.skipped > 0) {
+      backupMsg('None of the scores in that code fit the current number limits, so nothing was changed.', true);
+      return;
+    }
+    if (countGames(state.boards) === 0) { applyRestore(result); return; }   // nothing to overwrite
+    pendingRestore = result;
+    $('restoreQ').textContent = 'Replace all current high scores with the ' + plural(n) + ' in this code?';
     backupMsg('');
     $('restoreConfirm').hidden = false;
     $('restoreNo').focus();
@@ -1659,6 +1709,28 @@
     pendingRestore = null;
     $('restoreConfirm').hidden = true;
     backupMsg('Restore canceled. Your scores weren’t changed.');
+  });
+
+  // Erase everything asks "Are you sure?" before deleting anything.
+  const eraseMsg = (text) => { $('eraseMsg').textContent = text; };
+  $('eraseBtn').addEventListener('click', () => {
+    $('eraseBtn').hidden = true;
+    $('eraseConfirm').hidden = false;
+    eraseMsg('');
+    $('eraseNo').focus();
+  });
+  $('eraseNo').addEventListener('click', () => {
+    $('eraseConfirm').hidden = true;
+    $('eraseBtn').hidden = false;
+    eraseMsg('Nothing was erased.');
+    $('eraseBtn').focus();
+  });
+  $('eraseYes').addEventListener('click', () => {
+    eraseEverything();
+    $('eraseConfirm').hidden = true;
+    $('eraseBtn').hidden = false;
+    eraseMsg('Everything saved on this device was erased.');
+    $('eraseBtn').focus();
   });
 
   // ---------- Start ----------

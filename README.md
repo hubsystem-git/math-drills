@@ -19,6 +19,7 @@ Timed math practice for iPhone, iPad and computers: addition, subtraction, multi
 
 - **Scores live on each device.** The home-screen app keeps its own scores, separate from Safari, and removing the app from the home screen erases them.
 - **Moving or saving scores:** on the home screen, tap **Copy backup code**, then paste the code into **Restore from a code** on the other device. You can also paste it into Notes to keep a copy. Restoring replaces that device's scores.
+- **Starting over:** Erase everything, at the bottom of the home screen, deletes every score and setting on the device after asking "Are you sure?".
 - **Sound** is off while the iPhone or iPad is in silent mode. The speaker button turns it off in the app too (M on a keyboard).
 - **Updates:** after you upload a new `index.html` to GitHub, the app picks it up the next time it opens with an internet connection. GitHub can take up to 10 minutes to serve the new version.
 - **On a computer** you can also double-click `index.html` to play. Installing and offline use need the GitHub address.
