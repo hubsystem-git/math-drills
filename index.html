@@ -1416,7 +1416,8 @@
 
   function buildKeypad() {
     const pad = $('keypad');
-    ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'enter'].forEach(k => {
+    // Calculator layout: 7 8 9 on top.
+    ['7', '8', '9', '4', '5', '6', '1', '2', '3', 'back', '0', 'enter'].forEach(k => {
       const b = el('button', 'k' + (k === 'enter' ? ' enter' : ''));
       b.type = 'button'; b.dataset.key = k; b.tabIndex = -1;
       if (k === 'back') {
